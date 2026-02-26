@@ -1,1 +1,9 @@
 
+#----------------------
+#  헬스체크용
+#----------------------
+management:
+  endpoint:
+    web:
+      exposure:
+        include: [health, info, prometheus]
