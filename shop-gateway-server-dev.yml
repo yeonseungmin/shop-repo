@@ -1,1 +1,127 @@
+# 게이트 웨이 서버 설정
+server:
+  port: 8882
 
+spring:
+  cloud:
+    gateway:
+      server:
+        webflux:
+          metrics:
+            enabled: true
+
+	  globalcors:
+		cors-configurations:
+		  "[/**]":
+			allowed-origins:
+			  - "http://localhost:5173"
+			allowed-methods:
+			  - GET
+			  - POST
+			  - PUT
+			  - DELETE
+			  - PATCH
+			  - OPTIONS
+			allowed-headers:
+				  - Authorization
+			  - Set-Cookie
+			  - X-REQUEST-ID
+			allow-credentials: true
+			max-age: 3600
+
+          
+          routes:
+
+            # ==================================================
+            # 1) PRODUCT 라우팅
+            # ==================================================
+            - id: swaply-product
+              uri: lb://swaply-product
+              predicates:
+                - Path=/api/products/**
+
+            # ==================================================
+            # 2) ORDER 라우팅
+            # ==================================================
+            - id: swaply-order
+              uri: lb://swaply-order #게이트 웨이가 ip,port 대신 사용할 수 있는 이름
+
+              predicates:
+                - Path=/api/orders/**
+
+			# ==================================================
+            # 3) Member 라우팅
+            # ==================================================
+            - id: swaply-member-service
+              uri: lb://swaply-member-service
+              predicates:
+                - Path=/api/members/**
+
+
+            # ==================================================
+            # 4) (선택) Swagger/OpenAPI 통합용 - PRODUCT 문서 라우팅
+            # ==================================================
+            - id: product-openapi
+              uri: lb://swaply-product
+              predicates:
+                - Path=/v3/api-docs/product
+              filters:
+                - RewritePath=/v3/api-docs/product, /v3/api-docs
+
+
+            # ==================================================
+            # 5) (선택) Swagger/OpenAPI 통합용 - ORDER 문서 라우팅
+            # ==================================================
+            - id: order-openapi
+              uri: lb://swaply-order
+              predicates:
+                - Path=/v3/api-docs/order
+              filters:
+                - RewritePath=/v3/api-docs/order, /v3/api-docs
+
+
+# ============================================================
+# 5) (선택) Swagger UI 통합 메뉴 구성
+# ============================================================
+##############################################################
+# [Swagger 추가분]
+# - Gateway 한 곳에서 Swagger UI를 제공하고
+# - 각 서비스의 OpenAPI 문서를 메뉴로 등록한다
+#
+# 접속:
+#   http://localhost:8883/swagger-ui/index.html
+##############################################################
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: swaply-product
+        url: /v3/api-docs/product
+      - name: swaply-order
+        url: /v3/api-docs/order
+
+
+# ============================================================
+# 6) (선택) Actuator 노출 (헬스체크/정보)
+# ============================================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info, prometheus
+
+
+# ============================================================
+# 7) (선택) Eureka Client 설정
+# ============================================================
+##############################################################
+# [모드B: Eureka 운영]에서만 필요
+# - Gateway가 Eureka에 등록되고
+# - lb:// 라우팅이 동작한다
+##############################################################
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
