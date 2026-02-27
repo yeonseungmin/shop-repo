@@ -65,7 +65,7 @@ spring:
             - id: shop-member-service
               uri: lb://SHOP-MEMBER-SERVICE
               predicates:
-                - Path=/api/members**
+                - Path=/api/members/**
 
             # -------------------------------------------------------
             # 2) lecture-service 라우팅
