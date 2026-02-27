@@ -1,1 +1,182 @@
 
+
+
+# [파일경로] shop-gateway-dev.yml
+
+server:
+  port: 8882
+
+# ============================================================
+# Eureka Client 설정(Config Repo 에 두는 이유) 
+# Config 서버의 정보는 로컬 프로젝트가 실행되는 시점에 알아야 하지만, 유레카의 경우 일단 Config 정보를 취득한 다음에 접근해도 됨 
+# ============================================================
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://eureka-server:8761/eureka/
+  instance:
+    prefer-ip-address: true
+    
+      
+spring:
+  cloud:
+    gateway:
+      server:
+        webflux:
+
+          # CORS 설정
+          globalcors:
+            # (중요) CORS가 라우팅/핸들러에도 확실히 적용되도록 추가
+            add-to-simple-url-handler-mapping: true
+
+            cors-configurations:
+              '[/**]':     # 모든 경로에 적용
+                # 개발 중 Vite 포트가 바뀌어도 대응 (5173/5174/3000 등)
+                # allowCredentials:true 와 함께 쓰려면 * 대신 패턴/명시 Origin이 필요
+                allowedOriginPatterns:
+                  - "http://localhost:*"   # Vite 사용하는 경우
+
+                allowedMethods:
+                  - GET
+                  - POST
+                  - PUT
+                  - DELETE
+                  - PATCH
+                  - OPTIONS
+
+                allowedHeaders:
+                  - "*"      # 모든 헤더 허용
+
+                exposedHeaders:
+                  - "X-REQUEST-ID"  # 브라우저에서 읽을 수 있게 노출
+                  - "Authorization"
+
+                allowCredentials: true
+                maxAge: 3600
+
+          metrics:
+            enabled: true
+
+          routes:
+
+            # ======================== 서비스 라우팅 ==============================
+
+            # -------------------------------------------------------
+            # 1) shop-member-service 라우팅
+            # -------------------------------------------------------
+            - id: shop-member-service
+              uri: lb://shop-member-service #게이트웨이가 ip,port대신 사용할 수 있는 이름
+              predicates:
+                - Path=/api/members/**
+
+            # -------------------------------------------------------
+            # 2) lecture-service 라우팅
+            # -------------------------------------------------------
+            - id: lecture-service
+              uri: lb://lecture-service
+              predicates:
+                - Path=/api/lectures/**
+
+            # -------------------------------------------------------
+            # 3) payment-service 라우팅
+            # -------------------------------------------------------
+            - id: payment-service
+              uri: lb://payment-service
+              predicates:
+                - Path=/api/payments/**
+
+            # -------------------------------------------------------
+            # 4) promotion-service 라우팅
+            # -------------------------------------------------------
+            - id: promotion-service
+              uri: lb://promotion-service
+              predicates:
+                - Path=/api/promotions/**
+
+            # -------------------------------------------------------
+            # 5) cs-service 라우팅
+            # -------------------------------------------------------
+            - id: cs-service
+              uri: lb://cs-service
+              predicates:
+                - Path=/api/cs/**
+
+            # ======================== Swagger 라우팅 ==============================
+
+            # -------------------------------------------------------
+            # 1) Swagger/OpenAPI 통합용 - member-service 문서 라우팅
+            # -------------------------------------------------------
+            - id: member-openapi
+              uri: lb://member-service
+              predicates:
+                - Path=/v3/api-docs/member
+              filters:
+                - RewritePath=/v3/api-docs/member, /v3/api-docs
+
+            # -------------------------------------------------------
+            # 2) Swagger/OpenAPI 통합용 - lecture-service 문서 라우팅
+            # -------------------------------------------------------
+            - id: lecture-openapi
+              uri: lb://lecture-service
+              predicates:
+                - Path=/v3/api-docs/lecture
+              filters:
+                - RewritePath=/v3/api-docs/lecture, /v3/api-docs
+
+            # -------------------------------------------------------
+            # 3) Swagger/OpenAPI 통합용 - payment-service 문서 라우팅
+            # -------------------------------------------------------
+            - id: payment-openapi
+              uri: lb://payment-service
+              predicates:
+                - Path=/v3/api-docs/payment
+              filters:
+                - RewritePath=/v3/api-docs/payment, /v3/api-docs
+
+            # -------------------------------------------------------
+            # 4) Swagger/OpenAPI 통합용 - promotion-service 문서 라우팅
+            # -------------------------------------------------------
+            - id: promotion-openapi
+              uri: lb://promotion-service
+              predicates:
+                - Path=/v3/api-docs/promotion
+              filters:
+                - RewritePath=/v3/api-docs/promotion, /v3/api-docs
+
+            # -------------------------------------------------------
+            # 5) Swagger/OpenAPI 통합용 - cs-service 문서 라우팅
+            # -------------------------------------------------------
+            - id: cs-openapi
+              uri: lb://cs-service
+              predicates:
+                - Path=/v3/api-docs/cs
+              filters:
+                - RewritePath=/v3/api-docs/cs, /v3/api-docs
+
+
+# ============================================================
+# 5) (선택) Swagger UI 통합 메뉴 구성
+# ============================================================
+##############################################################
+# 접속 : http://localhost:8883/swagger-ui/index.html
+##############################################################
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: member-service
+        url: /v3/api-docs/member
+
+      - name: lecture-service
+        url: /v3/api-docs/lecture
+
+      - name: payment-service
+        url: /v3/api-docs/payment
+
+      - name: promotion-service
+        url: /v3/api-docs/promotion
+
+      - name: cs-service
+        url: /v3/api-docs/cs
+
+
