@@ -63,7 +63,7 @@ spring:
             # 1) shop-member-service 라우팅
             # -------------------------------------------------------
             - id: shop-member-service
-              uri: lb://shop-member-service #게이트웨이가 ip,port대신 사용할 수 있는 이름
+              uri: lb://SHOP-MEMBER-SERVICE #게이트웨이가 ip,port대신 사용할 수 있는 이름
               predicates:
                 - Path=/api/members/**
 
@@ -105,7 +105,7 @@ spring:
             # 1) Swagger/OpenAPI 통합용 - member-service 문서 라우팅
             # -------------------------------------------------------
             - id: member-openapi
-              uri: lb://member-service
+              uri: lb://SHOP-MEMBER-SERVICE
               predicates:
                 - Path=/v3/api-docs/member
               filters:
