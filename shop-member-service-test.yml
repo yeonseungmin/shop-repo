@@ -1,0 +1,9 @@
+
+server:
+  port: 0
+
+
+#유레카 금지
+eureka:
+  client:
+    enabled: false
